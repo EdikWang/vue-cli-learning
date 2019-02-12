@@ -1,48 +1,90 @@
 <template>
-	<div id="app">
-		<ul class="nav">
-			<li>
-				<router-link to="/" exact>Home</router-link>
-			</li>
-			<li v-for="demo of demos" :key="demo">
-				<router-link :to="`demo${demo}`">Demo-{{needZero(demo)}}{{demo}}</router-link>
-			</li>
-		</ul>
-		<div class="content">
-			<router-view :identity="identity"/>
+	<div class="hello">
+		<div class="hello-inner">
+			<h1 class="title"> 李漂亮选名大会 </h1>
+      <el-button @click="reset">重置</el-button>
+      <el-checkbox-group v-model="chosenSeconds" class="checkbox-container">
+        <el-checkbox-button v-for="second in seconds" :key="second" :label="second" border></el-checkbox-button>
+      </el-checkbox-group>
+      <el-checkbox-group v-model="chosenThirds" class="checkbox-container">
+        <el-checkbox-button v-for="third in thirds" :key="third" :label="third"></el-checkbox-button>
+      </el-checkbox-group>
 		</div>
+    <div class="result-container" v-if="tempResult && tempResult.length">
+      <h2 class="title">嗯，就从这里选吧（{{tempResult.length}}个）</h2>
+       <el-tag v-for="name in tempResult"
+               type="success"
+               :key="name"
+               class="result-item">{{name}}</el-tag>
+
+    </div>
 	</div>
 </template>
 
 <script>
-  const requireComponent  = require.context('./components/demos', true, /demo[1-9][0-9]?\.vue$/);
-	const DEMO_NUMBER = requireComponent.keys().length;
+    const FIRST = '李';
 
-  export default {
-    name: 'App',
-    data: function () {
-      return {
-        demos: DEMO_NUMBER,
-        identity: {
-          id: 123,
-          role: 123,
+    const SECONDS = [
+      '府', '宙', '秉', '舍', '承',
+      '岸', '玖', '松', '宗', '昂',
+      '岱', '附', '庚', '沅', '昀',
+      '易', '妮', '其', '姗', '宛',
+      '汶', '沂', '宜'
+    ];
+
+    const THIRDS = [
+      '偿', '鸿', '徽', '键', '鞠',
+      '骏', '励', '联', '沣', '与',
+      '蔓', '谦', '蔚', '泽', '斋',
+    ];
+
+    export default {
+      name: 'NameChoice',
+      data() {
+        return {
+          first: FIRST,
+          seconds: SECONDS,
+          thirds: THIRDS,
+          chosenSeconds: [],
+          chosenThirds: [],
         }
-      }
-    },
-    methods: {
-      getDemoArray() {
-        let arr = [];
-        for (let i = 0; i < DEMO_NUMBER; i++) {
-          arr.push(i + 1)
-        }
-        return arr;
       },
-      needZero (number){
-        return  number < 10  ? '0' : null
+      mounted() {
+        const chosenSeconds = window.localStorage.getItem('chosenSeconds');
+        const chosenThirds = window.localStorage.getItem('chosenThirds');
+
+        if (chosenSeconds && chosenThirds) {
+          this.chosenSeconds = chosenSeconds.split('@');
+          this.chosenThirds = chosenThirds.split('@');
+        }
+      },
+      methods: {
+        getAll(second, third) {
+          let result = [];
+          for (let i = 0; i < second.length; i++) {
+            for (let j = 0; j < third.length; j++) {
+              result.push(`${FIRST}${second[i]}${third[j]}`)
+            }
+          }
+          return result;
+        },
+        reset () {
+          this.chosenSeconds = [];
+          this.chosenThirds = [];
+          window.localStorage.clear()
+        }
+      },
+      computed: {
+        tempResult() {
+          if (this.chosenSeconds.length && this.chosenThirds.length) {
+            window.localStorage.setItem('chosenSeconds', this.chosenSeconds.join('@'));
+            window.localStorage.setItem('chosenThirds', this.chosenThirds.join('@'));
+            return this.getAll(this.chosenSeconds, this.chosenThirds)
+          }
+        }
       }
     }
-  }
-</script>
+</script>r5
 
 <style>
 	* {
@@ -65,70 +107,24 @@
     width: 100%;
     min-height: 100%;
   }
-  h1, h2 {
-    font-weight: normal;
-  }
-  ul, ol {
-    list-style-type: none;
-    padding: 0;
-    text-align: left;
-  }
-  .nav {
-    border-right: 1px solid gray;
-    padding: 50px 0 0 40px;
-    width: 120px;
-    flex-shrink: 0;
-  }
-  .nav li {
-    margin: 20px 0;
-  }
-  .content {
-    padding: 30px 20px;
-    flex-grow: 1;
-    box-sizing: border-box;
-  }
-  .inner-content {
-    margin-top: 30px;
-  }
-  a {
-    color: gray
-  }
-  .router-link-active {
-    color: #42b983;
-  }
-  button {
-    background: floralwhite;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    outline: none;
-    border: 1px solid olive;
-    padding: 5px;
-    margin: 10px 0;
-    border-radius: 4px;
-  }
-  h1 {
-    font-size: 36px;
-    font-weight: bold;
-    color: darkkhaki;
-  }
-  p {
-    margin: 10px 0;
+  .hello-inner {
+    text-align: center;
   }
   .title {
-    display: inline-block;
-    width: 150px;
-    margin-right: 15px;
-    color: crimson;
+    text-align: center;
+    margin: 20px 0;
   }
-  .item {
-    width: 400px;
-    margin: 10px auto;
-    padding-left: 20px;
-    text-align: left;
+  .checkbox-container, .result-container {
+    margin: 30px auto;
+    text-align: center;
   }
-  .item-explain {
-    color: gray;
-    font-style: italic;
+  .result-item {
+    margin: 5px
+  }
+  .el-checkbox-button .el-checkbox-button__inner,
+  .el-checkbox-button:first-child .el-checkbox-button__inner,
+  .el-checkbox-button.is-checked .el-checkbox-button__inner {
+    border-left: 1px solid #dcdfe6;
+    border-radius: 4px;
   }
 </style>
